@@ -54,7 +54,7 @@ const galleryMetadata = [
   { key: "gallery_1", title: "The Grand Ballroom", category: "Wedding" },
   { key: "gallery_2", title: "Champagne Tower", category: "Gala" },
   { key: "gallery_3", title: "Garden of Light", category: "Outdoor" },
-  { key: "gallery_  4", title: "Misty Elegance", category: "Themed" },
+  { key: "gallery_4", title: "Misty Elegance", category: "Themed" },
 ];
 
 
@@ -131,7 +131,17 @@ export default async function HomePage() {
           </HeroFadeIn>
 
           <HeroTitle delay={0.4} className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[0.95] text-balance mb-8 text-shadow-hero">
-            {contentValue(settings, "home.hero_title", "Where Light\nMeets Legacy").split("\n").map((line: string, i: number) => i === 0 ? <>{line}<br/></> : <span key={i} className="italic">{line}</span>)}
+            {contentValue(settings, "home.hero_title", "Where Light\nMeets Legacy")
+              .split("\n")
+              .map((line: string, i: number) => 
+                i === 0 ? (
+                  <span key={i}>{line}<br /></span>
+                ) : (
+                  <span key={i} className="italic text-balance mb-8 text-shadow-hero">
+                    {line}
+                  </span>
+                )
+              )}
           </HeroTitle>
 
           <HeroFadeIn delay={0.6}>

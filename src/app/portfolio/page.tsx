@@ -15,14 +15,22 @@ import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
 export default function PublicPortfolioPage() {
   const { data, loading } = useSite();
 
-  // 1. Process, sort, and map your portfolio database rows uniformly
-  const galleryItems = useMemo(() => {
-    if (!data?.portfolio) return [];
+  // Use 'as any' to bypass strict type checking when accessing dynamic store properties
+  const siteData = data as any;
+  const settings = siteData?.settings || {};
 
-    return [...data.portfolio]
+  // Safeguard access to deep objects
+  const heroMainUrl = siteData?.heroes?.portfolio || "";
+  const logoUrl = settings?.logo || "";
+
+  // 1. Process, sort, and map portfolio items
+  const galleryItems = useMemo(() => {
+    const portfolio = siteData?.portfolio || [];
+    
+    return [...portfolio]
       .sort((a, b) => {
-        const orderA = Number((a as any).sort_order) ?? Number((a as any).order) ?? 0;
-        const orderB = Number((b as any).sort_order) ?? Number((b as any).order) ?? 0;
+        const orderA = Number(a.sort_order ?? a.order ?? 9999);
+        const orderB = Number(b.sort_order ?? b.order ?? 9999);
         return orderA - orderB;
       })
       .map((item) => ({
@@ -30,24 +38,9 @@ export default function PublicPortfolioPage() {
         title: item.title || "Untitled Masterpiece",
         category: item.category || "Uncategorized",
         image: item.image || "",
-        src: item.image || "", // Dual interface assignment to support your gallery's asset parameters
+        src: item.image || "",
       }));
-  }, [data?.portfolio]);
-
-  // 2. Fallback configuration parameters extracted safely without triggering type compiler checks
-  const settings = useMemo(() => {
-    return (data as any)?.settings || data || {};
-  }, [data]);
-
-  // 3. Type-safe asset extraction fallback wrapper
-  const findAssetUrl = (key: string): string => {
-    const assetsArray = (data as any)?.assets;
-    if (!assetsArray || !Array.isArray(assetsArray)) return "";
-    return assetsArray.find((a: any) => a.image_key === key)?.public_url || "";
-  };
-
-  const heroMainUrl = findAssetUrl("hero_main");
-  const logoUrl = settings.logo_url || findAssetUrl("logo") || "";
+  }, [siteData?.portfolio]);
 
   if (loading) {
     return (
@@ -58,7 +51,7 @@ export default function PublicPortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-ivory)]">
+    <div className="min-h-screen bg-[var(--color-ivory)] flex flex-col">
       <Navbar logoUrl={logoUrl} />
 
       {/* Hero Header Presentation Banner Section */}
@@ -67,7 +60,7 @@ export default function PublicPortfolioPage() {
           {heroMainUrl && (
             <Image
               src={heroMainUrl}
-              alt="Background mapping layout"
+              alt="Hero background"
               fill
               priority
               className="object-cover"
@@ -87,10 +80,11 @@ export default function PublicPortfolioPage() {
       </section>
 
       {/* Dynamic Interactive Sorted Gallery Grid Wrapper */}
-      <section className="py-24 md:py-32">
+      <main className="flex-grow py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
           {galleryItems.length > 0 ? (
-            <PortfolioGallery initialItems={galleryItems as any[]} />
+            // Use 'as any' here to bypass potential interface mismatch with the component prop
+            <PortfolioGallery initialItems={galleryItems as any} />
           ) : (
             <div className="text-center py-12 text-[var(--color-muted-foreground)]">
               <p className="text-base font-medium">No collection pieces published to the public gallery yet.</p>
@@ -98,14 +92,16 @@ export default function PublicPortfolioPage() {
             </div>
           )}
         </div>
-      </section>
+      </main>
 
       <Footer
         logoUrl={logoUrl}
         email={settings.email}
         phone={settings.phone}
+        // Fallback to location if address is missing
         address={settings.address || settings.location}
-        instagram={settings.instagram_url}
+        // Fallback to empty string if missing
+        instagram={settings.instagram_url || ""}
         whatsapp={settings.whatsapp}
       />
       

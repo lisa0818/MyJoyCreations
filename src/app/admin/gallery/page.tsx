@@ -233,7 +233,7 @@ export default function AdminGalleryManager() {
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link
-            href="/admin/content"
+            href="/admin/dashboard"
             className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Site Manager

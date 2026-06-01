@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import type { StaticImageData } from "next/image";
 import { supabase } from "@/lib/supabase";
 
-// Fallback assets used if Supabase database is completely fresh and empty
+// Fallback assets
 import heroMain from "@/assets/hero-main.jpg";
 import aboutTeam from "@/assets/about-team.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -24,6 +24,9 @@ export type SiteSettings = {
   whatsapp: string;
   instagram: string;
   address: string;
+  // Added fields to resolve TypeScript errors
+  homeFeaturedImage?: string;
+  aboutFeaturedImage?: string;
 };
 
 export type PageHeroes = {
@@ -39,6 +42,8 @@ export type PortfolioItem = {
   image: string;
   title: string;
   category: string;
+  sort_order?: number;
+  order?: number;
 };
 
 export type SiteData = {
@@ -47,7 +52,6 @@ export type SiteData = {
   portfolio: PortfolioItem[];
 };
 
-// Extractor helper to turn imported local image objects into strings smoothly
 const getSrc = (img: string | StaticImageData): string => {
   return typeof img === "string" ? img : img.src;
 };
@@ -62,6 +66,8 @@ const DEFAULTS: SiteData = {
     whatsapp: "1234567890",
     instagram: "https://instagram.com/myjoycreations",
     address: "123 Celebration Lane, London, UK",
+    homeFeaturedImage: getSrc(heroMain),    // Default value
+    aboutFeaturedImage: getSrc(aboutTeam),  // Default value
   },
   heroes: {
     home: getSrc(heroMain),
@@ -71,12 +77,12 @@ const DEFAULTS: SiteData = {
     contact: getSrc(heroMain),
   },
   portfolio: [
-    { id: "1", image: getSrc(gallery1), title: "The Grand Ballroom", category: "Weddings" },
-    { id: "2", image: getSrc(gallery2), title: "Champagne Tower Gala", category: "Birthdays" },
-    { id: "3", image: getSrc(gallery3), title: "Garden of Light", category: "Outdoor" },
-    { id: "4", image: getSrc(gallery4), title: "Misty Elegance", category: "Themed" },
-    { id: "5", image: getSrc(gallery5), title: "Golden Celebration", category: "Birthdays" },
-    { id: "6", image: getSrc(gallery6), title: "Floral Entrance", category: "Weddings" },
+    { id: "1", image: getSrc(gallery1), title: "The Grand Ballroom", category: "Weddings", sort_order: 0, order: 0 },
+    { id: "2", image: getSrc(gallery2), title: "Champagne Tower Gala", category: "Birthdays", sort_order: 1000, order: 1000 },
+    { id: "3", image: getSrc(gallery3), title: "Garden of Light", category: "Outdoor", sort_order: 2000, order: 2000 },
+    { id: "4", image: getSrc(gallery4), title: "Misty Elegance", category: "Themed", sort_order: 3000, order: 3000 },
+    { id: "5", image: getSrc(gallery5), title: "Golden Celebration", category: "Birthdays", sort_order: 4000, order: 4000 },
+    { id: "6", image: getSrc(gallery6), title: "Floral Entrance", category: "Weddings", sort_order: 5000, order: 5000 },
   ],
 };
 
@@ -101,7 +107,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SiteData>(DEFAULTS);
   const [loading, setLoading] = useState(true);
 
-  // 1. Fetch live production data from Supabase upon site mount
   useEffect(() => {
     async function loadSiteData() {
       try {
@@ -119,7 +124,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
             portfolio: parsed.portfolio?.length ? parsed.portfolio : DEFAULTS.portfolio,
           });
         } else if (error && error.code === "PGRST116") {
-          // Row does not exist yet, let's provision default values inside your table
           await supabase.from("site_data").insert([{ id: ROW_ID, data: DEFAULTS }]);
         }
       } catch (err) {
@@ -131,7 +135,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     loadSiteData();
   }, []);
 
-  // Helper utility to write database entries securely up to Supabase
   const persistChanges = async (updatedData: SiteData) => {
     setData(updatedData);
     try {
@@ -141,7 +144,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 2. Asset Upload Helper: Sends images straight into a Supabase Storage bucket named "portfolio"
   const uploadFileToStorage = async (file: File, folder: string): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${folder}/${crypto.randomUUID()}.${fileExt}`;
@@ -152,7 +154,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
 
     if (uploadError) throw uploadError;
 
-    // Retrieve and return the public content URL
     const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(fileName);
     return urlData.publicUrl;
   };
@@ -183,23 +184,37 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     await persistChanges(updated);
   }, [data]);
 
-  // Atomically replace the full portfolio array and persist. Uses functional update
-  // to avoid stale-closure overwrites when multiple updates happen in sequence.
   const updatePortfolioList = useCallback(async (items: PortfolioItem[]) => {
-    // Use functional set to ensure we base off latest state, then persist the new
-    // value to Supabase.
-    setData((prev) => {
-      const updated = { ...prev, portfolio: items };
-      // Persist asynchronously (we don't await inside the state setter)
-      (async () => {
-        try {
-          await supabase.from("site_data").upsert({ id: ROW_ID, data: updated });
-        } catch (err) {
-          console.error("Failed to commit portfolio list update:", err);
+    const updated = { ...data, portfolio: items };
+    setData(updated);
+    try {
+      await supabase.from("site_data").upsert({ id: ROW_ID, data: updated });
+    } catch (err) {
+      console.error("Failed to commit portfolio list update:", err);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("site_data_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_data", filter: `id=eq.${ROW_ID}` },
+        (payload) => {
+          const newRow = (payload as any)?.new;
+          if (newRow?.data) {
+            const parsed = newRow.data as Partial<SiteData>;
+            setData({
+              settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
+              heroes: { ...DEFAULTS.heroes, ...(parsed.heroes || {}) },
+              portfolio: parsed.portfolio?.length ? parsed.portfolio : DEFAULTS.portfolio,
+            });
+          }
         }
-      })();
-      return updated;
-    });
+      )
+      .subscribe();
+
+    return () => { channel.unsubscribe(); };
   }, []);
 
   const deletePortfolioItem = useCallback(async (id: string) => {

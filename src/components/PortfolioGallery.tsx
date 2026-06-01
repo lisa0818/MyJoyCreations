@@ -8,11 +8,11 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 const filters = ["All", "Weddings", "Birthdays", "Lighting", "Outdoor", "Themed"];
 
 interface GalleryItem {
-  id: number;
+  id: string;
   image: string;
   title: string;
   category: string;
-  size: string;
+  size?: string;
 }
 
 interface PortfolioGalleryProps {
@@ -21,7 +21,7 @@ interface PortfolioGalleryProps {
 
 export function PortfolioGallery({ initialItems }: PortfolioGalleryProps) {
   const [activeFilter, setActiveFilter] = useState("All");
-  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const filtered = activeFilter === "All" 
     ? initialItems 
@@ -53,12 +53,12 @@ export function PortfolioGallery({ initialItems }: PortfolioGalleryProps) {
         </div>
       </ScrollReveal>
 
-      {/* CSS Masonry Columns Layout */}
-      <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+      {/* Row-based grid layout for horizontal order */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((item, i) => (
           <ScrollReveal key={item.id} delay={i * 0.05}>
             <div
-              className="group relative break-inside-avoid cursor-pointer rounded-2xl overflow-hidden bg-[var(--color-surface)]"
+              className="group relative cursor-pointer rounded-2xl overflow-hidden bg-[var(--color-surface)]"
               onClick={() => setLightbox(item.id)}
             >
               <div className={`relative w-full ${
