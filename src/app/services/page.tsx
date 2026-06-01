@@ -9,6 +9,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
 // FIXED: Changed hyphens to underscores to match the database values exactly
 const baseServices = [
@@ -70,15 +71,18 @@ const baseServices = [
 
 
 export default async function ServicesPage() {
-  // 1. Fetch asset public URLs directly from Supabase with caching disabled
-  const { data: assets } = await supabase
-    .from("homepage_assets")
-    .select("*");
-
+  const settings = await getSettings();
+  const assets = (await getHomepageAssets()) || [];
   const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
-  
+
   const heroMainUrl = findAsset("hero_main");
-  const logoUrl = findAsset("logo");
+  const logoUrl = settings.logo_url || findAsset("logo");
+
+  // Allow overriding service short descriptions from settings.content
+  const servicesWithOverrides = baseServices.map((s) => ({
+    ...s,
+    shortDesc: contentValue(settings, `services.${s.assetKey}.shortDesc`, s.shortDesc),
+  }));
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
@@ -125,7 +129,7 @@ export default async function ServicesPage() {
           </ScrollReveal>
 
           <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" staggerDelay={0.1}>
-            {baseServices.map((service) => {
+            {servicesWithOverrides.map((service) => {
               const serviceImageUrl = findAsset(service.assetKey);
               return (
                 <StaggerItem key={service.title}>
@@ -231,7 +235,7 @@ export default async function ServicesPage() {
         </div>
       </section>
 
-      <Footer logoUrl={logoUrl} />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

@@ -19,6 +19,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
 interface Asset {
   image_key: string;
@@ -79,14 +80,9 @@ const packages = [
 ];
 
 export default async function HomePage() {
+  const settings = await getSettings();
   // Fetch assets from Supabase
-  const { data, error } = await supabase.from("homepage_assets").select("*");
-
-  if (error) {
-    console.error("Supabase data fetch error:", error.message);
-  }
-
-  const assets = (data as Asset[]) || [];
+  const assets = (await getHomepageAssets()) || [];
 
   // Helper function to extract URL based on key
   const findAsset = (key: string): string => {
@@ -94,7 +90,7 @@ export default async function HomePage() {
   };
 
   const heroMainUrl = findAsset("hero_main");
-  const logoUrl = findAsset("logo");
+  const logoUrl = settings.logo_url || findAsset("logo");
 
   const services = servicesData.map((service) => ({
     ...service,
@@ -131,18 +127,16 @@ export default async function HomePage() {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
           <HeroFadeIn delay={0.2} className="text-white/80 text-xs font-medium uppercase tracking-[0.4em] mb-8">
-            The Art of Celebration
+            {contentValue(settings, "home.kicker", "The Art of Celebration")}
           </HeroFadeIn>
 
           <HeroTitle delay={0.4} className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[0.95] text-balance mb-8 text-shadow-hero">
-            Where Light
-            <br />
-            Meets <span className="italic">Legacy</span>
+            {contentValue(settings, "home.hero_title", "Where Light\nMeets Legacy").split("\n").map((line: string, i: number) => i === 0 ? <>{line}<br/></> : <span key={i} className="italic">{line}</span>)}
           </HeroTitle>
 
           <HeroFadeIn delay={0.6}>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light mb-12">
-              Architectural event lighting and bespoke floral curation for the world's most intimate celebrations.
+              {contentValue(settings, "home.lead", "Architectural event lighting and bespoke floral curation for the world's most intimate celebrations.")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -435,7 +429,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Footer logoUrl={logoUrl} />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

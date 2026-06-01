@@ -1,126 +1,274 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { 
-  TrendingUp, 
-  Users, 
-  Briefcase, 
+import { useState } from "react";
+import Link from "next/link";
+import {
+  Upload,
+  Check,
+  Loader2,
   Image as ImageIcon,
-  ArrowUpRight,
-  Clock,
-  Loader2
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useSite, type PageHeroes } from "@/lib/site-store";
 
-export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
-    totalInquiries: 0,
-    activeServices: 0,
-    galleryItems: 0,
-    pendingInquiries: 0
-  });
-  const [recentInquiries, setRecentInquiries] = useState<any[]>([]);
+const PAGE_LABELS: Record<keyof PageHeroes, string> = {
+  home: "Home",
+  about: "About",
+  services: "Services",
+  portfolio: "Portfolio",
+  contact: "Contact",
+};
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      const [inquiriesRes, servicesRes, galleryRes, pendingRes, recentRes] = await Promise.all([
-        supabase.from("inquiries").select("id", { count: "exact" }),
-        supabase.from("services").select("id", { count: "exact" }).eq("active", true),
-        supabase.from("gallery").select("id", { count: "exact" }),
-        supabase.from("inquiries").select("id", { count: "exact" }).eq("status", "New"),
-        supabase.from("inquiries").select("*").order("created_at", { ascending: false }).limit(5)
-      ]);
+export default function AdminContentManager() {
+  const {
+    data,
+    loading,
+    setSettings,
+    setHero,
+    uploadFileToStorage,
+  } = useSite();
 
-      setMetrics({
-        totalInquiries: inquiriesRes.count || 0,
-        activeServices: servicesRes.count || 0,
-        galleryItems: galleryRes.count || 0,
-        pendingInquiries: pendingRes.count || 0
-      });
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [uploadingState, setUploadingState] = useState<string | null>(null);
 
-      if (recentRes.data) setRecentInquiries(recentRes.data);
-      setLoading(false);
+  const flashSaved = () => {
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    try {
+      setUploadingState("logo");
+      const url = await uploadFileToStorage(file, "logos");
+      await setSettings({ logo: url });
+      flashSaved();
+    } catch (err) {
+      console.error("Logo upload failed:", err);
+      alert("Failed to upload logo image to Supabase Storage.");
+    } finally {
+      setUploadingState(null);
     }
-    loadDashboardData();
-  }, []);
+  };
+
+  const handleHeroUpload = async (page: keyof PageHeroes, file: File) => {
+    try {
+      setUploadingState(`hero-${page}`);
+      const url = await uploadFileToStorage(file, `heroes/${page}`);
+      await setHero(page, url);
+      flashSaved();
+    } catch (err) {
+      console.error("Hero upload failed:", err);
+      alert(`Failed to upload ${PAGE_LABELS[page]} hero image.`);
+    } finally {
+      setUploadingState(null);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-20 bg-[var(--color-surface)] min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--color-brand)]" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto">
-      <div className="mb-10">
-        <h1 className="font-display text-3xl mb-1">Overview</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">Studio Performance & Analytics Metrics</p>
+    <div className="min-h-screen bg-[var(--color-surface)]">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 bg-white border-b border-[var(--color-border)] shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img src={data.settings.logo} alt="" className="h-8 w-auto object-contain" />
+            <div>
+              <p className="font-display text-base font-semibold leading-tight">{data.settings.businessName}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Content Management</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {savedFlash && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-semibold mr-2 animate-pulse">
+                <Check className="w-3.5 h-3.5" /> Saved to Supabase
+              </span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 space-y-10">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-white p-6 rounded-2xl border border-[var(--color-border)] cinematic-shadow">
+          <div>
+            <h1 className="font-display text-4xl mb-1">Site Manager</h1>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Manage global imagery, copies, and contact records stored on your cloud profile.
+            </p>
+          </div>
+          {/* Redirection Button Leading directly to the Standalone Portfolio Section */}
+          <Link
+            href="/admin/gallery"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 text-white hover:bg-slate-800 text-xs font-semibold uppercase tracking-[0.15em] rounded-full transition-all shadow-md shrink-0 self-start md:self-auto"
+          >
+            <ImageIcon className="w-4 h-4" />
+            Edit Portfolio
+          </Link>
+        </div>
+
+        {/* Business Info */}
+        <Section title="Business Information" subtitle="Logo, name, tagline & contact details">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Logo Upload Box */}
+            <div className="bg-white rounded-2xl p-6 cinematic-shadow">
+              <Label>Logo</Label>
+              <div className="flex items-center gap-4 mt-3">
+                <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface)] flex items-center justify-center overflow-hidden border border-[var(--color-border)] relative">
+                  {uploadingState === "logo" ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-[var(--color-brand)]" />
+                  ) : (
+                    <img src={data.settings.logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                  )}
+                </div>
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] rounded-full bg-[var(--color-surface)] hover:bg-[var(--color-brand)] hover:text-white cursor-pointer transition-all">
+                  <Upload className="w-3.5 h-3.5" />
+                  {uploadingState === "logo" ? "Uploading..." : "Upload"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingState !== null}
+                    onChange={(e) => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Business Copy Config */}
+            <div className="bg-white rounded-2xl p-6 cinematic-shadow lg:col-span-2 space-y-4">
+              <Field
+                label="Business Name"
+                value={data.settings.businessName}
+                onChange={(v) => setSettings({ businessName: v })}
+              />
+              <Field
+                label="Tagline"
+                value={data.settings.tagline}
+                onChange={(v) => setSettings({ tagline: v })}
+              />
+            </div>
+
+            {/* Global Identity Contacts */}
+            <div className="bg-white rounded-2xl p-6 cinematic-shadow lg:col-span-3 grid md:grid-cols-2 gap-4">
+              <Field
+                label="Email"
+                type="email"
+                value={data.settings.email}
+                onChange={(v) => setSettings({ email: v })}
+              />
+              <Field
+                label="Phone Number"
+                type="tel"
+                value={data.settings.phone}
+                onChange={(v) => setSettings({ phone: v })}
+              />
+              <Field
+                label="WhatsApp Number"
+                type="tel"
+                value={data.settings.whatsapp}
+                onChange={(v) => setSettings({ whatsapp: v })}
+                hint="Digits only with country code (e.g. 1234567890)"
+              />
+              <Field
+                label="Instagram URL"
+                type="url"
+                value={data.settings.instagram}
+                onChange={(v) => setSettings({ instagram: v })}
+              />
+              <div className="md:col-span-2">
+                <Field
+                  label="Address"
+                  value={data.settings.address}
+                  onChange={(v) => setSettings({ address: v })}
+                />
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Page Hero Images Section */}
+        <Section title="Page Hero Images" subtitle="The large banner image shown at the top of each page">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(Object.keys(PAGE_LABELS) as Array<keyof PageHeroes>).map((page) => (
+              <div key={page} className="bg-white rounded-2xl p-4 cinematic-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs uppercase tracking-[0.2em] font-semibold">{PAGE_LABELS[page]}</p>
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] rounded-full bg-[var(--color-surface)] hover:bg-[var(--color-brand)] hover:text-white cursor-pointer transition-all">
+                    <Upload className="w-3 h-3" />
+                    {uploadingState === `hero-${page}` ? "Processing..." : "Change"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingState !== null}
+                      onChange={(e) => e.target.files?.[0] && handleHeroUpload(page, e.target.files[0])}
+                    />
+                  </label>
+                </div>
+                <div className="aspect-[16/9] rounded-xl overflow-hidden bg-[var(--color-surface)] flex items-center justify-center relative">
+                  {uploadingState === `hero-${page}` ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--color-brand)]" />
+                  ) : (
+                    <img src={data.heroes[page]} alt={`${PAGE_LABELS[page]} hero`} className="w-full h-full object-cover" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
       </div>
+    </div>
+  );
+}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white p-6 rounded-2xl cinematic-shadow">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-[var(--color-surface)] rounded-xl text-[var(--color-brand)]"><Users className="w-5 h-5" /></div>
-          </div>
-          <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)] font-medium">Total Inquiries</p>
-          <h3 className="text-3xl font-display mt-1">{metrics.totalInquiries}</h3>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl cinematic-shadow">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-[var(--color-surface)] rounded-xl text-amber-600"><Clock className="w-5 h-5" /></div>
-          </div>
-          <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)] font-medium">Pending Review</p>
-          <h3 className="text-3xl font-display mt-1">{metrics.pendingInquiries}</h3>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl cinematic-shadow">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-[var(--color-surface)] rounded-xl text-emerald-600"><Briefcase className="w-5 h-5" /></div>
-          </div>
-          <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)] font-medium">Active Services</p>
-          <h3 className="text-3xl font-display mt-1">{metrics.activeServices}</h3>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl cinematic-shadow">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-[var(--color-surface)] rounded-xl text-blue-600"><ImageIcon className="w-5 h-5" /></div>
-          </div>
-          <p className="text-xs uppercase tracking-wider text-[var(--color-muted-foreground)] font-medium">Gallery Assets</p>
-          <h3 className="text-3xl font-display mt-1">{metrics.galleryItems}</h3>
-        </div>
+function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-[var(--color-border)] pt-8 first:border-0 first:pt-0">
+      <div className="mb-5">
+        <h2 className="font-display text-2xl text-slate-900">{title}</h2>
+        {subtitle && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{subtitle}</p>}
       </div>
+      {children}
+    </section>
+  );
+}
 
-      <div className="bg-white rounded-2xl cinematic-shadow p-6">
-        <h2 className="font-display text-xl mb-4">Recent Inquiries</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="border-b text-[var(--color-muted-foreground)] uppercase text-[10px] tracking-wider">
-                <th className="py-3 px-4">Client</th>
-                <th className="py-3 px-4">Service</th>
-                <th className="py-3 px-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentInquiries.map((inq) => (
-                <tr key={inq.id} className="border-b last:border-none">
-                  <td className="py-3 px-4 font-medium">{inq.name}</td>
-                  <td className="py-3 px-4 text-[var(--color-muted-foreground)]">{inq.service}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      inq.status === 'New' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                    }`}>{inq.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+function Label({ children }: { children: React.ReactNode }) {
+  return <label className="block text-[10px] uppercase tracking-[0.2em] font-semibold text-[var(--color-muted-foreground)]">{children}</label>;
+}
+
+// Input field helper
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  hint?: string;
+}) {
+  return (
+    <div className="w-full">
+      <Label>{label}</Label>
+      <input
+        type={type}
+        value={value || ""}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full px-4 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]/20 focus:border-[var(--color-brand)] transition-all text-sm text-slate-900"
+      />
+      {hint && <p className="text-[10px] text-[var(--color-muted-foreground)] mt-1">{hint}</p>}
     </div>
   );
 }

@@ -6,9 +6,14 @@ import { MessageCircle, MapPin, Mail, Phone, Camera } from "lucide-react";
 
 interface FooterProps {
   logoUrl?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  instagram?: string;
+  whatsapp?: string;
 }
 
-export function Footer({ logoUrl }: FooterProps) {
+export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: FooterProps) {
   return (
     <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
@@ -19,16 +24,9 @@ export function Footer({ logoUrl }: FooterProps) {
             <div className="flex items-center gap-3 mb-6">
               {logoUrl ? (
                 <div className="relative h-12 w-12 shrink-0">
-                  <Image 
-                    src={logoUrl} 
-                    alt="MyJoy Creations" 
-                    fill
-                    sizes="48px"
-                    className="object-contain" 
-                  />
+                  <img src={logoUrl} alt="MyJoy Creations" className="w-full h-full object-contain" />
                 </div>
               ) : (
-                /* Fallback styling placeholder while image URL isn't loaded */
                 <div className="w-12 h-12 rounded-full bg-[var(--color-brand)]/10 animate-pulse" />
               )}
               <span className="font-display text-xl font-semibold text-[var(--color-ink)]">MyJoy Creations</span>
@@ -85,26 +83,26 @@ export function Footer({ logoUrl }: FooterProps) {
             </h4>
             <div className="flex flex-col gap-4">
               <a
-                href="mailto:hello@myjoycreations.com"
-                className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-brand)] transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                hello@myjoycreations.com
-              </a>
-              <a
-                href="tel:+1234567890"
-                className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-brand)] transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                +1 (234) 567-890
-              </a>
-              <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
-                <MapPin className="w-4 h-4" />
-                Verna, Goa
-              </div>
+                  href={email ? `mailto:${email}` : "#"}
+                  className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-brand)] transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  {email || "hello@myjoycreations.com"}
+                </a>
+                <a
+                  href={phone ? `tel:${phone}` : "#"}
+                  className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-brand)] transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                  {phone || "+1 (234) 567-890"}
+                </a>
+                <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
+                  <MapPin className="w-4 h-4" />
+                  {address || "Verna, Goa"}
+                </div>
               <div className="flex items-center gap-4 mt-4">
                 <a
-                  href="https://instagram.com"
+                  href={instagram || "https://instagram.com"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2.5 rounded-full bg-[var(--color-background)] border border-[var(--color-border)] hover:bg-[var(--color-brand)] hover:text-white hover:border-[var(--color-brand)] transition-all"
@@ -112,7 +110,7 @@ export function Footer({ logoUrl }: FooterProps) {
                   <Camera className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://wa.me/1234567890"
+                  href={whatsapp ? `https://wa.me/${whatsapp.replace(/^\+/, "")}` : "https://wa.me/1234567890"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2.5 rounded-full bg-[var(--color-background)] border border-[var(--color-border)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all"

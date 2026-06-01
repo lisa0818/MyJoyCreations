@@ -8,6 +8,7 @@ import { Footer } from "../../components/Footer";
 import { WhatsAppButton } from "../../components/WhatsAppButton";
 // Import our new motion wrappers
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
 const values = [
   { icon: Lightbulb, title: "Innovation", desc: "We push boundaries to craft custom-tailored sensory spaces unique to your concept." },
@@ -31,19 +32,17 @@ const team = [
 ];
 
 export default async function AboutPage() {
-  // Query asset data directly from Supabase on the server
-  const { data: assets } = await supabase
-    .from("homepage_assets")
-    .select("*");
-
+  const settings = await getSettings();
+  const assets = (await getHomepageAssets()) || [];
   const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
 
   const heroMainUrl = findAsset("hero_main");
   const aboutTeamUrl = findAsset("about-team");
+  const logoUrl = settings.logo_url || findAsset("logo");
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
       {/* Hero Section */}
       <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-20">
@@ -64,11 +63,11 @@ export default async function AboutPage() {
         <div className="relative z-10 text-center px-6">
           {/* Framer motion animations applied via client wrappers */}
           <HeroFadeIn delay={0.2} className="text-white/70 text-xs uppercase tracking-[0.4em] mb-4">
-            Our Story
+            {contentValue(settings, "about.kicker", "Our Story")}
           </HeroFadeIn>
-          
+
           <HeroTitle delay={0.4} className="font-display text-5xl md:text-7xl text-white text-shadow-hero">
-            The Art of <span className="italic">Celebration</span>
+            {contentValue(settings, "about.hero_title", "The Art of \nCelebration").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
           </HeroTitle>
         </div>
       </section>
@@ -96,14 +95,10 @@ export default async function AboutPage() {
               </span>
               <h2 className="font-display text-4xl md:text-5xl mb-6">Crafting Memories Since 2012</h2>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-6">
-                MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. 
-                What started as a passion project between two friends has blossomed into an internationally 
-                recognized event design studio.
+                {contentValue(settings, "about.intro_p1", "MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. What started as a passion project between two friends has blossomed into an internationally recognized event design studio.")}
               </p>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-8">
-                We specialize in creating immersive environments where light, texture, and emotion converge 
-                to tell your unique story. From intimate garden gatherings to grand ballroom transformations, 
-                we approach each project with the same dedication to artistry and detail.
+                {contentValue(settings, "about.intro_p2", "We specialize in creating immersive environments where light, texture, and emotion converge to tell your unique story. From intimate garden gatherings to grand ballroom transformations, we approach each project with the same dedication to artistry and detail.")}
               </p>
               <div className="flex gap-8">
                 <div>
@@ -263,7 +258,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

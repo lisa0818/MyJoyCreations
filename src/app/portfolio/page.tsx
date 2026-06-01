@@ -1,73 +1,73 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { supabase } from "@/lib/supabase";
+import { useMemo } from "react";
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import { useSite } from "@/lib/site-store";
+
+// Named imports matching your components directory exports
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
 
-// 1. Define the interface to fix TypeScript errors
-interface Asset {
-  image_key: string;
-  public_url: string;
-}
+export default function PublicPortfolioPage() {
+  const { data, loading } = useSite();
 
-const baseMetadata = [
-  { id: 1, key: "gallery_1", title: "The Grand Ballroom", category: "Weddings", size: "large" },
-  { id: 2, key: "gallery_2", title: "Champagne Tower Gala", category: "Birthdays", size: "tall" },
-  { id: 3, key: "gallery_3", title: "Garden of Light", category: "Outdoor", size: "tall" },
-  { id: 4, key: "gallery_4", title: "Misty Elegance", category: "Themed", size: "tall" },
-  { id: 5, key: "gallery_5", title: "Golden Celebration", category: "Birthdays", size: "wide" },
-  { id: 6, key: "gallery_6", title: "Floral Entrance", category: "Weddings", size: "tall" },
-  { id: 7, key: "gallery_1", title: "Crystal Dreams", category: "Weddings", size: "wide" },
-  { id: 8, key: "gallery_3", title: "Twilight Terrace", category: "Outdoor", size: "tall" },
-  { id: 9, key: "gallery_4", title: "Enchanted Forest", category: "Themed", size: "wide" },
-  { id: 10, key: "gallery_2", title: "Midnight Gala", category: "Birthdays", size: "tall" },
-  { id: 11, key: "gallery_5", title: "Summer Soiree", category: "Outdoor", size: "wide" },
-  { id: 12, key: "gallery_6", title: "Royal Affair", category: "Weddings", size: "tall" },
-];
+  // 1. Process, sort, and map your portfolio database rows uniformly
+  const galleryItems = useMemo(() => {
+    if (!data?.portfolio) return [];
 
-export default async function PortfolioPage() {
-  // 2. Fetch assets correctly (removed invalid cacheControl)
-  const { data, error } = await supabase
-    .from("homepage_assets")
-    .select("*");
+    return [...data.portfolio]
+      .sort((a, b) => {
+        const orderA = Number((a as any).sort_order) ?? Number((a as any).order) ?? 0;
+        const orderB = Number((b as any).sort_order) ?? Number((b as any).order) ?? 0;
+        return orderA - orderB;
+      })
+      .map((item) => ({
+        id: String(item.id),
+        title: item.title || "Untitled Masterpiece",
+        category: item.category || "Uncategorized",
+        image: item.image || "",
+        src: item.image || "", // Dual interface assignment to support your gallery's asset parameters
+      }));
+  }, [data?.portfolio]);
 
-  if (error) {
-    console.error("Supabase data fetch error in Portfolio:", error.message);
-  }
+  // 2. Fallback configuration parameters extracted safely without triggering type compiler checks
+  const settings = useMemo(() => {
+    return (data as any)?.settings || data || {};
+  }, [data]);
 
-  // 3. Apply the Asset interface to the fetched data
-  const assets = (data as Asset[]) || [];
-
-  const findAsset = (key: string): string => {
-    return assets.find((a: Asset) => a.image_key === key)?.public_url || "";
+  // 3. Type-safe asset extraction fallback wrapper
+  const findAssetUrl = (key: string): string => {
+    const assetsArray = (data as any)?.assets;
+    if (!assetsArray || !Array.isArray(assetsArray)) return "";
+    return assetsArray.find((a: any) => a.image_key === key)?.public_url || "";
   };
 
-  // 4. Resolve URLs dynamically
-  const heroMainUrl = findAsset("hero_main");
+  const heroMainUrl = findAssetUrl("hero_main");
+  const logoUrl = settings.logo_url || findAssetUrl("logo") || "";
 
-  const galleryItems = baseMetadata.map((item) => ({
-    id: item.id,
-    title: item.title,
-    category: item.category,
-    size: item.size,
-    image: findAsset(item.key),
-  }));
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20 bg-[var(--color-ivory)] min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
-      {/* Hero Section */}
+      {/* Hero Header Presentation Banner Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 z-0">
           {heroMainUrl && (
-            <Image 
-              src={heroMainUrl} 
-              alt="Background mapping layout" 
+            <Image
+              src={heroMainUrl}
+              alt="Background mapping layout"
               fill
               priority
               className="object-cover"
@@ -86,14 +86,29 @@ export default async function PortfolioPage() {
         </div>
       </section>
 
-      {/* Dynamic Interactive Gallery Grid */}
+      {/* Dynamic Interactive Sorted Gallery Grid Wrapper */}
       <section className="py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <PortfolioGallery initialItems={galleryItems} />
+          {galleryItems.length > 0 ? (
+            <PortfolioGallery initialItems={galleryItems as any[]} />
+          ) : (
+            <div className="text-center py-12 text-[var(--color-muted-foreground)]">
+              <p className="text-base font-medium">No collection pieces published to the public gallery yet.</p>
+              <p className="text-xs mt-1 opacity-70">Check back shortly to view our updated projects.</p>
+            </div>
+          )}
         </div>
       </section>
 
-      <Footer />
+      <Footer
+        logoUrl={logoUrl}
+        email={settings.email}
+        phone={settings.phone}
+        address={settings.address || settings.location}
+        instagram={settings.instagram_url}
+        whatsapp={settings.whatsapp}
+      />
+      
       <WhatsAppButton />
     </div>
   );

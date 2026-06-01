@@ -9,19 +9,19 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 // Client component wrappers for interactive handling and animations
 import { ContactForm } from "@/components/ContactForm";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
 export default async function ContactPage() {
   // Query custom asset background routing configuration variables from Supabase if needed
-  const { data: assets } = await supabase
-    .from("homepage_assets")
-    .select("*");
-
+  const settings = await getSettings();
+  const assets = (await getHomepageAssets()) || [];
   const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
   const heroMainUrl = findAsset("hero_main");
+  const logoUrl = settings.logo_url || findAsset("logo");
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
       {/* Hero Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden pt-20">
@@ -40,10 +40,10 @@ export default async function ContactPage() {
         </div>
         <div className="relative z-10 text-center px-6">
           <HeroFadeIn delay={0.2} className="text-white/70 text-xs uppercase tracking-[0.4em] mb-4">
-            Get in Touch
+            {contentValue(settings, "contact.kicker", "Get in Touch")}
           </HeroFadeIn>
           <HeroTitle delay={0.4} className="font-display text-5xl md:text-7xl text-white text-shadow-hero">
-            Let's <span className="italic">Connect</span>
+            {contentValue(settings, "contact.hero_title", "Let's \nConnect").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
           </HeroTitle>
         </div>
       </section>
@@ -138,7 +138,7 @@ export default async function ContactPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

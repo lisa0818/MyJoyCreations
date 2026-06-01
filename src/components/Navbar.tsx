@@ -31,16 +31,9 @@ export function Navbar({ logoUrl }: NavbarProps) {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative h-16 w-16 shrink-0 bg-[var(--color-surface)] rounded-full overflow-hidden flex items-center justify-center">
               {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt="MyJoy Creations"
-                  fill
-                  priority
-                  sizes="64px"
-                  className="object-contain transition-transform duration-300 group-hover:scale-105"
-                />
+                // Use a plain <img> tag for externally hosted storage URLs to avoid remotePatterns issues
+                <img src={logoUrl} alt="MyJoy Creations" className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
               ) : (
-                /* Fallback styling placeholder while image URL isn't loaded */
                 <div className="w-8 h-8 rounded-full bg-[var(--color-brand)]/20 animate-pulse" />
               )}
             </div>
