@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Radius variables */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Color variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --color-ivory: #faf9f6;
+  --color-surface: #f4f2ee;
+  --color-ink: #171717;
+  --color-brand: #d92d20;
+  --color-brand-warm: #c44536;
+  --color-gold: #c9a84c;
+  --color-cream: #fdfbf7;
+  --color-warm-gray: #8b8680;
+  --color-soft-border: #e8e4dd;
+
+  /* Font mappings: 
+     Tailwind classes 'font-sans' and 'font-serif' use these variables */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #faf9f6;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #d92d20;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f2ee;
+  --secondary-foreground: #171717;
+  --muted: #f4f2ee;
+  --muted-foreground: #8b8680;
+  --accent: #f4f2ee;
+  --accent-foreground: #171717;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e8e4dd;
+  --input: #e8e4dd;
+  --ring: #d92d20;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .text-balance { text-wrap: balance; }
+  
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .glass-nav { background: rgba(250, 249, 246, 0.85); backdrop-filter: blur(16px); }
+  .glass-dark { background: rgba(23, 23, 23, 0.8); backdrop-filter: blur(16px); }
+  .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(232, 228, 221, 0.6); }
+
+  .hero-gradient { background: linear-gradient(180deg, rgba(23, 23, 23, 0.3) 0%, rgba(23, 23, 23, 0.5) 50%, rgba(23, 23, 23, 0.8) 100%); }
+  .text-shadow-hero { text-shadow: 0 2px 40px rgba(0, 0, 0, 0.4); }
+  .cinematic-shadow { box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.12); }
+  
+  .hover-lift { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease; }
+  .hover-lift:hover { transform: translateY(-6px); box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.15); }
+
+  .image-zoom { overflow: hidden; }
+  .image-zoom img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+  .image-zoom:hover img { transform: scale(1.08); }
+}
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes slide-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in { animation: fade-in 0.6s ease-out both; }
+.animate-scale-in { animation: scale-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-in-right { animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
