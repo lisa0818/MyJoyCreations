@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  Upload,
-  Check,
-  Loader2,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Check, Loader2, Image as ImageIcon } from "lucide-react";
 import { useSite, type PageHeroes } from "@/lib/site-store";
 
 const PAGE_LABELS: Record<keyof PageHeroes, string> = {
@@ -19,14 +14,7 @@ const PAGE_LABELS: Record<keyof PageHeroes, string> = {
 };
 
 export default function AdminContentManager() {
-  const {
-    data,
-    loading,
-    setSettings,
-    setHero,
-    uploadFileToStorage,
-  } = useSite();
-
+  const { data, loading, setSettings, setHero, uploadFileToStorage } = useSite();
   const [savedFlash, setSavedFlash] = useState(false);
   const [uploadingState, setUploadingState] = useState<string | null>(null);
 
@@ -34,6 +22,8 @@ export default function AdminContentManager() {
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1500);
   };
+
+  const getSafeSrc = (src: any) => (typeof src === "string" && src.trim() !== "" ? src : "");
 
   const handleLogoUpload = async (file: File) => {
     try {
@@ -67,11 +57,11 @@ export default function AdminContentManager() {
     try {
       setUploadingState(key);
       const url = await uploadFileToStorage(file, "featured");
-      await setSettings({ [key]: url });
+      await setSettings({ [key]: url } as any);
       flashSaved();
     } catch (err) {
       console.error("Featured image upload failed:", err);
-      alert("Failed to upload image.");
+      alert("Failed to upload featured image.");
     } finally {
       setUploadingState(null);
     }
@@ -90,7 +80,13 @@ export default function AdminContentManager() {
       <header className="sticky top-0 z-40 bg-white border-b border-[var(--color-border)] shadow-sm">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={data.settings.logo} alt="Logo" className="h-8 w-auto object-contain" />
+            <div className="h-8 w-8 overflow-hidden rounded-md border border-[var(--color-border)]">
+              {getSafeSrc(data.settings.logo) ? (
+                <img src={data.settings.logo} alt="Logo" className="h-full w-full object-contain" />
+              ) : (
+                <div className="h-full w-full bg-gray-100" />
+              )}
+            </div>
             <div>
               <p className="font-display text-base font-semibold leading-tight">{data.settings.businessName}</p>
               <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Content Management</p>
@@ -123,7 +119,13 @@ export default function AdminContentManager() {
               <Label>Logo</Label>
               <div className="flex items-center gap-4 mt-3">
                 <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface)] flex items-center justify-center overflow-hidden border border-[var(--color-border)] relative">
-                  {uploadingState === "logo" ? <Loader2 className="animate-spin" /> : <img src={data.settings.logo} alt="Logo" className="w-full h-full object-contain" />}
+                  {uploadingState === "logo" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : getSafeSrc(data.settings.logo) ? (
+                    <img src={data.settings.logo} alt="Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-[10px] text-gray-400">Empty</span>
+                  )}
                 </div>
                 <label className="cursor-pointer bg-slate-100 px-4 py-2 rounded-full text-xs font-bold uppercase hover:bg-slate-200">
                   {uploadingState === "logo" ? "Uploading..." : "Upload"}
@@ -138,38 +140,79 @@ export default function AdminContentManager() {
           </div>
         </Section>
 
+        <Section title="Contact Information">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 cinematic-shadow space-y-4">
+              <Field label="Phone Number" value={data.settings.contactPhone || ""} onChange={(v) => setSettings({ contactPhone: v })} />
+              <Field label="WhatsApp Number" value={data.settings.contactWhatsapp || ""} onChange={(v) => setSettings({ contactWhatsapp: v })} />
+            </div>
+            <div className="bg-white rounded-2xl p-6 cinematic-shadow space-y-4">
+              <Field label="Address" value={data.settings.contactAddress || ""} onChange={(v) => setSettings({ contactAddress: v })} />
+              <Field label="Instagram Link" value={data.settings.contactInstagram || ""} onChange={(v) => setSettings({ contactInstagram: v })} />
+            </div>
+          </div>
+        </Section>
+
         <Section title="Page Hero Images">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {(Object.keys(PAGE_LABELS) as Array<keyof PageHeroes>).map((page) => (
-              <div key={page} className="bg-white rounded-2xl p-4 cinematic-shadow">
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-xs uppercase font-semibold">{PAGE_LABELS[page]}</p>
-                  <label className="cursor-pointer text-xs font-bold uppercase">
-                    {uploadingState === `hero-${page}` ? "..." : "Change"}
-                    <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleHeroUpload(page, e.target.files[0])} />
-                  </label>
-                </div>
-                <div className="aspect-[16/9] rounded-xl overflow-hidden bg-gray-100">
-                  <img src={data.heroes[page] || ""} alt={PAGE_LABELS[page]} className="w-full h-full object-cover" />
-                </div>
+              <FeaturedImageCard 
+                key={page}
+                label={`${PAGE_LABELS[page]} Hero`}
+                src={getSafeSrc(data.heroes[page])}
+                onUpload={(f: File) => handleHeroUpload(page, f)}
+                isUploading={uploadingState === `hero-${page}`}
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Signature Atmosphere">
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 cinematic-shadow space-y-4">
+                <FeaturedImageCard 
+                  label={`Atmosphere ${i}`} 
+                  src={getSafeSrc(data.settings[`homeAtmosphere${i}` as keyof typeof data.settings] as string)} 
+                  onUpload={(f) => handleFeaturedImageUpload(`homeAtmosphere${i}`, f)} 
+                  isUploading={uploadingState === `homeAtmosphere${i}`} 
+                />
+                <Field 
+                  label="Title" 
+                  value={(data.settings[`homeAtmosphereTitle${i}` as keyof typeof data.settings] as string) || ""} 
+                  onChange={(v) => setSettings({ [`homeAtmosphereTitle${i}`]: v })} 
+                />
+                <Field 
+                  label="Description" 
+                  value={(data.settings[`homeAtmosphereDesc${i}` as keyof typeof data.settings] as string) || ""} 
+                  onChange={(v) => setSettings({ [`homeAtmosphereDesc${i}`]: v })} 
+                />
               </div>
             ))}
           </div>
         </Section>
 
-        <Section title="Featured Page Images">
-          <div className="grid md:grid-cols-2 gap-6">
+        <Section title="Moments We Have Crafted">
+          <div className="grid md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <FeaturedImageCard 
+                key={i} 
+                label={`Moment ${i}`} 
+                src={getSafeSrc(data.settings[`homeMoment${i}` as keyof typeof data.settings] as string)} 
+                onUpload={(f) => handleFeaturedImageUpload(`homeMoment${i}`, f)} 
+                isUploading={uploadingState === `homeMoment${i}`} 
+              />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="About Section">
+          <div className="max-w-md bg-white rounded-2xl p-6 cinematic-shadow">
             <FeaturedImageCard 
-              label="Home: Featured Image" 
-              src={data.settings.homeFeaturedImage || ""} 
-              onUpload={(f: File) => handleFeaturedImageUpload("homeFeaturedImage", f)}
-              isUploading={uploadingState === "homeFeaturedImage"}
-            />
-            <FeaturedImageCard 
-              label="About: Featured Image" 
-              src={data.settings.aboutFeaturedImage || ""} 
-              onUpload={(f: File) => handleFeaturedImageUpload("aboutFeaturedImage", f)}
-              isUploading={uploadingState === "aboutFeaturedImage"}
+              label="Featured Image" 
+              src={getSafeSrc(data.settings.aboutFeaturedImage)} 
+              onUpload={(f) => handleFeaturedImageUpload("aboutFeaturedImage", f)} 
+              isUploading={uploadingState === "aboutFeaturedImage"} 
             />
           </div>
         </Section>
@@ -178,16 +221,9 @@ export default function AdminContentManager() {
   );
 }
 
-interface FeatureCardProps {
-  label: string;
-  src: string;
-  onUpload: (file: File) => void;
-  isUploading: boolean;
-}
-
-function FeaturedImageCard({ label, src, onUpload, isUploading }: FeatureCardProps) {
+function FeaturedImageCard({ label, src, onUpload, isUploading }: { label: string, src: string, onUpload: (f: File) => void, isUploading: boolean }) {
   return (
-    <div className="bg-white rounded-2xl p-4 cinematic-shadow">
+    <div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs uppercase font-semibold">{label}</p>
         <label className="cursor-pointer px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold uppercase hover:bg-slate-200">
@@ -198,36 +234,41 @@ function FeaturedImageCard({ label, src, onUpload, isUploading }: FeatureCardPro
       <div className="aspect-video rounded-xl overflow-hidden bg-gray-100 relative">
         {isUploading ? (
           <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin" /></div>
-        ) : (
+        ) : src ? (
           <img src={src} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full bg-gray-100">
+            <span className="text-xs text-gray-400">No Image</span>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string, children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border-t pt-8">
-      <h2 className="font-display text-2xl mb-5">{title}</h2>
+    <div className="space-y-4">
+      <h2 className="font-display text-2xl font-semibold">{title}</h2>
       {children}
-    </section>
+    </div>
   );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="block text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-500">{children}</label>;
+  return <p className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-[0.1em]">{children}</p>;
 }
 
-function Field({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <div>
+    <div className="space-y-2">
       <Label>{label}</Label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full px-4 py-2 rounded-xl border border-gray-200 text-sm"
+        className="w-full px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] text-sm"
+        placeholder={`Enter ${label.toLowerCase()}`}
       />
     </div>
   );

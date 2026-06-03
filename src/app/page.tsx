@@ -30,21 +30,18 @@ const servicesData = [
   {
     key: "service-floral",
     title: "Floral Design",
-    subtitle: "Living Artistry",
     description: "Bespoke floral installations that transform spaces into living, breathing masterpieces of natural beauty.",
     icon: Flower2,
   },
   {
     key: "service-lighting",
     title: "Atmospheric Lighting",
-    subtitle: "Light & Shadow",
     description: "Architectural lighting design that manipulates warmth and shadow to guide the emotional journey of your evening.",
     icon: Lightbulb,
   },
   {
     key: "service-outdoor",
     title: "Outdoor Setup",
-    subtitle: "Garden Dreams",
     description: "Enchanting garden and terrace transformations with fairy lights, drapery, and nature-inspired elegance.",
     icon: Sparkles,
   },
@@ -217,9 +214,7 @@ export default async function HomePage() {
                       </div>
                       <IconComponent className="absolute bottom-4 right-4 w-6 h-6 text-white/80" />
                     </div>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--color-muted-foreground)] mb-1">
-                      {service.subtitle}
-                    </p>
+                
                     <h3 className="font-display text-2xl mb-3 group-hover:text-[var(--color-brand)] transition-colors">
                       {service.title}
                     </h3>

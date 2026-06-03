@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import type { StaticImageData } from "next/image";
 import { supabase } from "@/lib/supabase";
 
-// Fallback assets
 import heroMain from "@/assets/hero-main.jpg";
 import aboutTeam from "@/assets/about-team.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -24,9 +23,21 @@ export type SiteSettings = {
   whatsapp: string;
   instagram: string;
   address: string;
-  // Added fields to resolve TypeScript errors
+  location?: string;
+  instagram_url?: string;
   homeFeaturedImage?: string;
   aboutFeaturedImage?: string;
+  homeAtmosphere1?: string;
+  homeAtmosphere2?: string;
+  homeAtmosphere3?: string;
+  homeMoment1?: string;
+  homeMoment2?: string;
+  homeMoment3?: string;
+  homeMoment4?: string;
+  contactPhone?: string;
+  contactWhatsapp?: string;
+  contactAddress?: string;
+  contactInstagram?: string;
 };
 
 export type PageHeroes = {
@@ -66,8 +77,19 @@ const DEFAULTS: SiteData = {
     whatsapp: "1234567890",
     instagram: "https://instagram.com/myjoycreations",
     address: "123 Celebration Lane, London, UK",
-    homeFeaturedImage: getSrc(heroMain),    // Default value
-    aboutFeaturedImage: getSrc(aboutTeam),  // Default value
+    homeFeaturedImage: getSrc(heroMain),
+    aboutFeaturedImage: getSrc(aboutTeam),
+    homeAtmosphere1: getSrc(gallery1),
+    homeAtmosphere2: getSrc(gallery2),
+    homeAtmosphere3: getSrc(gallery3),
+    homeMoment1: getSrc(gallery4),
+    homeMoment2: getSrc(gallery5),
+    homeMoment3: getSrc(gallery6),
+    homeMoment4: getSrc(gallery1),
+    contactPhone: "+1 (234) 567-890",
+    contactWhatsapp: "1234567890",
+    contactAddress: "123 Celebration Lane, London, UK",
+    contactInstagram: "https://instagram.com/myjoycreations",
   },
   heroes: {
     home: getSrc(heroMain),
@@ -127,7 +149,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           await supabase.from("site_data").insert([{ id: ROW_ID, data: DEFAULTS }]);
         }
       } catch (err) {
-        console.error("Failed to sync layout parameters with Supabase:", err);
+        console.error("Failed to sync layout parameters:", err);
       } finally {
         setLoading(false);
       }
@@ -137,25 +159,17 @@ export function SiteProvider({ children }: { children: ReactNode }) {
 
   const persistChanges = async (updatedData: SiteData) => {
     setData(updatedData);
-    try {
-      await supabase.from("site_data").upsert({ id: ROW_ID, data: updatedData });
-    } catch (err) {
-      console.error("Failed to commit updates online:", err);
-    }
+    await supabase.from("site_data").upsert({ id: ROW_ID, data: updatedData });
   };
 
   const uploadFileToStorage = async (file: File, folder: string): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${folder}/${crypto.randomUUID()}.${fileExt}`;
-    
     const { error: uploadError } = await supabase.storage
       .from("portfolio")
       .upload(fileName, file, { cacheControl: "3600", upsert: true });
-
     if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(fileName);
-    return urlData.publicUrl;
+    return supabase.storage.from("portfolio").getPublicUrl(fileName).data.publicUrl;
   };
 
   const setSettings = useCallback(async (s: Partial<SiteSettings>) => {
@@ -169,59 +183,69 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   }, [data]);
 
   const addPortfolioItem = useCallback(async (item: Omit<PortfolioItem, "id">) => {
-    const updated = {
-      ...data,
-      portfolio: [...data.portfolio, { ...item, id: crypto.randomUUID() }],
-    };
+    const updated = { ...data, portfolio: [...data.portfolio, { ...item, id: crypto.randomUUID() }] };
     await persistChanges(updated);
   }, [data]);
 
   const updatePortfolioItem = useCallback(async (id: string, item: Partial<PortfolioItem>) => {
-    const updated = {
-      ...data,
-      portfolio: data.portfolio.map((p) => (p.id === id ? { ...p, ...item } : p)),
-    };
+    const updated = { ...data, portfolio: data.portfolio.map((p) => (p.id === id ? { ...p, ...item } : p)) };
     await persistChanges(updated);
   }, [data]);
 
   const updatePortfolioList = useCallback(async (items: PortfolioItem[]) => {
     const updated = { ...data, portfolio: items };
     setData(updated);
-    try {
-      await supabase.from("site_data").upsert({ id: ROW_ID, data: updated });
-    } catch (err) {
-      console.error("Failed to commit portfolio list update:", err);
-    }
+    await supabase.from("site_data").upsert({ id: ROW_ID, data: updated });
   }, [data]);
 
+  // Realtime Subscription
   useEffect(() => {
-    const channel = supabase
-      .channel("site_data_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_data", filter: `id=eq.${ROW_ID}` },
-        (payload) => {
-          const newRow = (payload as any)?.new;
-          if (newRow?.data) {
-            const parsed = newRow.data as Partial<SiteData>;
-            setData({
-              settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
-              heroes: { ...DEFAULTS.heroes, ...(parsed.heroes || {}) },
-              portfolio: parsed.portfolio?.length ? parsed.portfolio : DEFAULTS.portfolio,
-            });
-          }
-        }
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel>;
 
-    return () => { channel.unsubscribe(); };
+    const initSubscription = () => {
+      // Remove any existing channel with this name to avoid conflicts
+      supabase.removeChannel(supabase.channel("site_data_changes"));
+
+      // Create the channel
+      channel = supabase.channel("site_data_changes");
+
+      // Register the listener synchronously
+      channel
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "site_data", filter: `id=eq.${ROW_ID}` },
+          (payload) => {
+            const newRow = (payload as any)?.new;
+            if (newRow?.data) {
+              const parsed = newRow.data as Partial<SiteData>;
+              setData((prev) => ({
+                settings: { ...DEFAULTS.settings, ...prev.settings, ...(parsed.settings || {}) },
+                heroes: { ...DEFAULTS.heroes, ...prev.heroes, ...(parsed.heroes || {}) },
+                portfolio: parsed.portfolio?.length ? parsed.portfolio : prev.portfolio,
+              }));
+            }
+          }
+        )
+        // Subscribe only after the listener is attached
+        .subscribe((status) => {
+          if (status !== 'SUBSCRIBED') {
+            console.warn(`Realtime status: ${status}`);
+          }
+        });
+    };
+
+    initSubscription();
+
+    // Cleanup: Remove the channel when the component unmounts
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const deletePortfolioItem = useCallback(async (id: string) => {
-    const updated = {
-      ...data,
-      portfolio: data.portfolio.filter((p) => p.id !== id),
-    };
+    const updated = { ...data, portfolio: data.portfolio.filter((p) => p.id !== id) };
     await persistChanges(updated);
   }, [data]);
 
@@ -230,20 +254,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SiteContext.Provider
-      value={{
-        data,
-        loading,
-        setSettings,
-        setHero,
-        addPortfolioItem,
-        updatePortfolioItem,
-        updatePortfolioList,
-        deletePortfolioItem,
-        uploadFileToStorage,
-        resetAll,
-      }}
-    >
+    <SiteContext.Provider value={{ data, loading, setSettings, setHero, addPortfolioItem, updatePortfolioItem, updatePortfolioList, deletePortfolioItem, uploadFileToStorage, resetAll }}>
       {children}
     </SiteContext.Provider>
   );
