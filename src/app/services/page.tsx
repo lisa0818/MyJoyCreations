@@ -1,15 +1,14 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Flower2, Lightbulb, Sparkles, PartyPopper, Heart, Star, Crown, MessageCircle } from "lucide-react";
+import { ArrowRight, Flower2, Lightbulb, Sparkles, PartyPopper, Heart, Star, Crown, MessageCircle, Loader2 } from "lucide-react";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
-import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
+import { useSite } from "@/lib/site-store";
 
 // FIXED: Changed hyphens to underscores to match the database values exactly
 const baseServices = [
@@ -70,23 +69,30 @@ const baseServices = [
 ];
 
 
-export default async function ServicesPage() {
-  const settings = await getSettings();
-  const assets = (await getHomepageAssets()) || [];
-  const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
+export default function ServicesPage() {
+  const { data, loading } = useSite();
+  const site = (data as any) || { settings: {}, heroes: {}, portfolio: [] };
+  const settings = site.settings || {};
+  const heroMainUrl = site.heroes?.services || settings.homeFeaturedImage || "";
 
-  const heroMainUrl = findAsset("hero_main");
-  const logoUrl = settings.logo_url || findAsset("logo");
-
-  // Allow overriding service short descriptions from settings.content
-  const servicesWithOverrides = baseServices.map((s) => ({
+  // Allow overriding short descriptions from settings.content if provided
+  const servicesWithOverrides = baseServices.map((s, i) => ({
     ...s,
-    shortDesc: contentValue(settings, `services.${s.assetKey}.shortDesc`, s.shortDesc),
+    shortDesc: settings?.services?.[s.assetKey]?.shortDesc || s.shortDesc,
+    image: settings[`homeAtmosphere${i + 1}` as keyof typeof settings] || site.portfolio?.[i]?.image || "",
   }));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20 bg-[var(--color-ivory)] min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar logoUrl={logoUrl} />
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden pt-20">
@@ -130,7 +136,7 @@ export default async function ServicesPage() {
 
           <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" staggerDelay={0.1}>
             {servicesWithOverrides.map((service) => {
-              const serviceImageUrl = findAsset(service.assetKey);
+              const serviceImageUrl = service.image || "";
               return (
                 <StaggerItem key={service.title}>
                   <div className="group bg-white rounded-2xl overflow-hidden cinematic-shadow hover-lift h-full flex flex-col">
@@ -235,7 +241,7 @@ export default async function ServicesPage() {
         </div>
       </section>
 
-      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
+      <Footer />
       <WhatsAppButton />
     </div>
   );

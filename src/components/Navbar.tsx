@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { useSite } from "@/lib/site-store";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -14,13 +15,11 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-interface NavbarProps {
-  logoUrl?: string;
-}
-
-export function Navbar({ logoUrl }: NavbarProps) {
+export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { data } = useSite();
+  const logoUrl = data?.settings?.logo || "";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-nav border-b border-[var(--color-border)]">

@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
+import { SiteProvider } from "@/lib/site-store"; // Import your SiteProvider
 import { Fraunces } from 'next/font/google';
-import "./globals.css"; // Imported once here
+import "./globals.css";
 
 // 1. Initialize the font with the CSS variable
 const fraunces = Fraunces({ 
@@ -39,13 +40,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={fraunces.variable}>
-      {/* The 'font-sans' class here applies the Inter font defined in globals.css.
-        You can use 'font-display' to apply the Fraunces font (mapped to --font-fraunces) 
-        wherever you need it in your components.
-      */}
       <body className="font-sans">
         <Providers>
-          {children}
+          {/* Wrapping children in SiteProvider ensures the data is available throughout your site */}
+          <SiteProvider>
+            {children}
+          </SiteProvider>
         </Providers>
       </body>
     </html>

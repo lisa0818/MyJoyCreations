@@ -1,12 +1,12 @@
-export const dynamic = "force-dynamic";
+"use client";
 
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
   Sparkles,
   Lightbulb,
+  Loader2,
   Flower2,
   Heart,
   Star,
@@ -19,12 +19,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
-import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
-
-interface Asset {
-  image_key: string;
-  public_url: string;
-}
+import { useSite } from "@/lib/site-store";
 
 const servicesData = [
   {
@@ -54,7 +49,6 @@ const galleryMetadata = [
   { key: "gallery_4", title: "Misty Elegance", category: "Themed" },
 ];
 
-
 const packages = [
   {
     name: "Essential",
@@ -76,35 +70,39 @@ const packages = [
   },
 ];
 
-export default async function HomePage() {
-  const settings = await getSettings();
-  // Fetch assets from Supabase
-  const assets = (await getHomepageAssets()) || [];
+export default function HomePage() {
+  const { data, loading } = useSite();
+  const site = (data as any) || { settings: {}, heroes: {}, portfolio: [] };
 
-  // Helper function to extract URL based on key
-  const findAsset = (key: string): string => {
-    return assets.find((a: Asset) => a.image_key === key)?.public_url || "";
-  };
+  const settings = site.settings || {};
+  const heroMainUrl = site.heroes?.home || settings.homeFeaturedImage || "";
+  const logoUrl = settings.logo || "";
 
-  const heroMainUrl = findAsset("hero_main");
-  const logoUrl = settings.logo_url || findAsset("logo");
-
-  const services = servicesData.map((service) => ({
-    ...service,
-    image: findAsset(service.key),
+  const services = servicesData.map((s, i) => ({
+    ...s,
+    title: settings[`homeAtmosphereTitle${i + 1}` as keyof typeof settings] || s.title,
+    description: settings[`homeAtmosphereDesc${i + 1}` as keyof typeof settings] || s.description,
+    image: settings[`homeAtmosphere${i + 1}` as keyof typeof settings] || "",
   }));
 
-  const galleryItems = galleryMetadata.map((item) => ({
-    ...item,
-    image: findAsset(item.key),
-  }));
-
-  // Safely grab the spotlight item or provide a structured fallback
+  const galleryItems = [1, 2, 3, 4].map((i) => ({
+    title: settings[`homeMomentTitle${i}` as keyof typeof settings] || galleryMetadata[i - 1]?.title || `Moment ${i}`,
+    category: settings[`homeMomentCategory${i}` as keyof typeof settings] || galleryMetadata[i - 1]?.category || "Signature",
+    image: settings[`homeMoment${i}` as keyof typeof settings] || "",
+  })).filter((item) => item.image);
   const featuredGalleryItem = galleryItems[0] || { image: "", title: "Featured Creation", category: "Design" };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20 bg-[var(--color-ivory)] min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar logoUrl={logoUrl} />
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -124,26 +122,16 @@ export default async function HomePage() {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
           <HeroFadeIn delay={0.2} className="text-white/80 text-xs font-medium uppercase tracking-[0.4em] mb-8">
-            {contentValue(settings, "home.kicker", "The Art of Celebration")}
+            {settings?.home?.kicker || "The Art of Celebration"}
           </HeroFadeIn>
 
           <HeroTitle delay={0.4} className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[0.95] text-balance mb-8 text-shadow-hero">
-            {contentValue(settings, "home.hero_title", "Where Light\nMeets Legacy")
-              .split("\n")
-              .map((line: string, i: number) => 
-                i === 0 ? (
-                  <span key={i}>{line}<br /></span>
-                ) : (
-                  <span key={i} className="italic text-balance mb-8 text-shadow-hero">
-                    {line}
-                  </span>
-                )
-              )}
+            {settings?.home?.hero_title || "Where Light\nMeets Legacy"}
           </HeroTitle>
 
           <HeroFadeIn delay={0.6}>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light mb-12">
-              {contentValue(settings, "home.lead", "Architectural event lighting and bespoke floral curation for the world's most intimate celebrations.")}
+              {settings?.home?.lead || "Architectural event lighting and bespoke floral curation for the world's most intimate celebrations."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -168,7 +156,6 @@ export default async function HomePage() {
           <div className="w-px h-16 bg-gradient-to-b from-white/0 via-white/50 to-white/0 animate-pulse" />
         </div>
       </section>
-
 
       {/* Services Section */}
       <section className="py-24 md:py-32">
@@ -214,7 +201,7 @@ export default async function HomePage() {
                       </div>
                       <IconComponent className="absolute bottom-4 right-4 w-6 h-6 text-white/80" />
                     </div>
-                
+                    
                     <h3 className="font-display text-2xl mb-3 group-hover:text-[var(--color-brand)] transition-colors">
                       {service.title}
                     </h3>
@@ -290,7 +277,7 @@ export default async function HomePage() {
             </StaggerItem>
 
             {/* Remaining Gallery Row Grid Items */}
-            {galleryItems.slice(1).map((item) => (
+            {galleryItems.slice(1).map((item: any) => (
               <StaggerItem key={item.title} className="col-span-6 md:col-span-4">
                 <Link href="/portfolio" className="block relative group overflow-hidden rounded-2xl cinematic-shadow aspect-[3/4]">
                   {item.image && (
@@ -312,7 +299,6 @@ export default async function HomePage() {
           </StaggerContainer>
         </div>
       </section>
-
 
       {/* Featured Packages */}
       <section className="bg-[var(--color-surface)] py-24 md:py-32">
@@ -411,9 +397,9 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-6">
           <StaggerContainer className="grid md:grid-cols-3 gap-8" staggerDelay={0.1}>
             {[
-              { icon: Phone, label: "Call Us", value: "+1 (234) 567-890" },
-              { icon: Mail, label: "Email Us", value: "hello@myjoycreations.com" },
-              { icon: MapPin, label: "Visit Us", value: "London, United Kingdom" },
+              { icon: Phone, label: "Call Us", value: settings.contactPhone || settings.phone || "+1 (234) 567-890" },
+              { icon: Mail, label: "Email Us", value: settings.email || "hello@myjoycreations.com" },
+              { icon: MapPin, label: "Visit Us", value: settings.contactAddress || settings.address || "London, United Kingdom" },
             ].map((item) => {
               const ContactIcon = item.icon;
               return (
@@ -434,7 +420,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
+      <Footer />
       <WhatsAppButton />
     </div>
   );

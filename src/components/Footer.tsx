@@ -3,17 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, MapPin, Mail, Phone, Camera } from "lucide-react";
+import { useSite } from "@/lib/site-store";
 
-interface FooterProps {
-  logoUrl?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  instagram?: string;
-  whatsapp?: string;
-}
-
-export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: FooterProps) {
+export function Footer() {
+  const { data } = useSite();
+  const settings = data?.settings || {};
+  const logoUrl = settings.logo || "";
+  const email = settings.email || "";
+  const phone = settings.contactPhone || settings.phone || "";
+  const address = settings.contactAddress || settings.address || settings.location || "";
+  const instagram = settings.contactInstagram || settings.instagram_url || settings.instagram || "";
+  const whatsapp = settings.contactWhatsapp || settings.whatsapp || "";
   return (
     <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
