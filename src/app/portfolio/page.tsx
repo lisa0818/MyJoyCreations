@@ -52,7 +52,7 @@ export default function PublicPortfolioPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)] flex flex-col">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
       {/* Hero Header Presentation Banner Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden pt-20">
@@ -94,7 +94,16 @@ export default function PublicPortfolioPage() {
         </div>
       </main>
 
-      <Footer />
+      <Footer
+        logoUrl={logoUrl}
+        email={settings.email}
+        phone={settings.phone}
+        // Fallback to location if address is missing
+        address={settings.address || settings.location}
+        // Fallback to empty string if missing
+        instagram={settings.instagram_url || ""}
+        whatsapp={settings.whatsapp}
+      />
       
       <WhatsAppButton />
     </div>

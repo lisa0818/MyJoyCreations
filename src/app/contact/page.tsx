@@ -1,8 +1,7 @@
-"use client";
-
+import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Loader2 } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -10,25 +9,19 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 // Client component wrappers for interactive handling and animations
 import { ContactForm } from "@/components/ContactForm";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
-import { useSite } from "@/lib/site-store";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
-export default function ContactPage() {
-  const { data, loading } = useSite();
-  const site = (data as any) || { settings: {}, heroes: {} };
-  const settings = site.settings || {};
-  const heroMainUrl = site.heroes?.contact || settings.homeFeaturedImage || "";
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20 bg-[var(--color-ivory)] min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
-      </div>
-    );
-  }
+export default async function ContactPage() {
+  // Query custom asset background routing configuration variables from Supabase if needed
+  const settings = await getSettings();
+  const assets = (await getHomepageAssets()) || [];
+  const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
+  const heroMainUrl = findAsset("hero_main");
+  const logoUrl = settings.logo_url || findAsset("logo");
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
       {/* Hero Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden pt-20">
@@ -47,10 +40,10 @@ export default function ContactPage() {
         </div>
         <div className="relative z-10 text-center px-6">
           <HeroFadeIn delay={0.2} className="text-white/70 text-xs uppercase tracking-[0.4em] mb-4">
-            {settings?.content?.contact?.kicker || settings?.contactKicker || "Get in Touch"}
+            {contentValue(settings, "contact.kicker", "Get in Touch")}
           </HeroFadeIn>
           <HeroTitle delay={0.4} className="font-display text-5xl md:text-7xl text-white text-shadow-hero">
-            {(settings?.content?.contact?.hero_title || settings?.contactHeroTitle || "Let's \nConnect").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
+            {contentValue(settings, "contact.hero_title", "Let's \nConnect").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
           </HeroTitle>
         </div>
       </section>
@@ -91,10 +84,10 @@ export default function ContactPage() {
 
                 <StaggerContainer className="space-y-6" staggerDelay={0.1}>
                   {[
-                    { icon: Phone, label: "Phone", value: settings.contactPhone || settings.phone || "+1 (234) 567-890", href: settings.contactPhone ? `tel:${settings.contactPhone}` : settings.phone ? `tel:${settings.phone}` : null },
-                    { icon: Mail, label: "Email", value: settings.email || "hello@myjoycreations.com", href: settings.email ? `mailto:${settings.email}` : null },
-                    { icon: MapPin, label: "Address", value: settings.contactAddress || settings.address || "123 Celebration Lane, London, UK", href: null },
-                    { icon: Clock, label: "Hours", value: settings.hours || "Mon - Sat: 9AM - 7PM", href: null },
+                    { icon: Phone, label: "Phone", value: "+1 (234) 567-890", href: "tel:+1234567890" },
+                    { icon: Mail, label: "Email", value: "hello@myjoycreations.com", href: "mailto:hello@myjoycreations.com" },
+                    { icon: MapPin, label: "Address", value: "123 Celebration Lane, London, UK", href: null },
+                    { icon: Clock, label: "Hours", value: "Mon - Sat: 9AM - 7PM", href: null },
                   ].map((item) => (
                     <StaggerItem key={item.label}>
                       <div className="flex items-start gap-4 p-6 bg-white rounded-xl cinematic-shadow">
@@ -145,7 +138,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

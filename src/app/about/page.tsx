@@ -1,15 +1,14 @@
-"use client";
-
+import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Award, Users, Heart, Lightbulb, Sparkles, Star, Target, Loader2 } from "lucide-react";
+import { ArrowRight, Award, Users, Heart, Lightbulb, Sparkles, Star, Target } from "lucide-react";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "../../components/ScrollReveal";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
 import { WhatsAppButton } from "../../components/WhatsAppButton";
 // Import our new motion wrappers
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
-import { useSite } from "@/lib/site-store";
+import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
 
 const values = [
   { icon: Lightbulb, title: "Innovation", desc: "We push boundaries to craft custom-tailored sensory spaces unique to your concept." },
@@ -32,24 +31,18 @@ const team = [
   { name: "David Kross", role: "Logistics Lead", bio: "Controls complex on-site schedules to ensure flawless execution deployment." },
 ];
 
-export default function AboutPage() {
-  const { data, loading } = useSite();
-  const site = (data as any) || { settings: {}, heroes: {} };
-  const settings = site.settings || {};
-  const heroMainUrl = site.heroes?.about || settings.aboutFeaturedImage || "";
-  const aboutTeamUrl = site.settings?.aboutFeaturedImage || "";
+export default async function AboutPage() {
+  const settings = await getSettings();
+  const assets = (await getHomepageAssets()) || [];
+  const findAsset = (key: string) => assets?.find((a) => a.image_key === key)?.public_url || "";
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20 bg-[var(--color-ivory)] min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
-      </div>
-    );
-  }
+  const heroMainUrl = findAsset("hero_main");
+  const aboutTeamUrl = findAsset("about-team");
+  const logoUrl = settings.logo_url || findAsset("logo");
 
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
-      <Navbar />
+      <Navbar logoUrl={logoUrl} />
 
       {/* Hero Section */}
       <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-20">
@@ -70,11 +63,11 @@ export default function AboutPage() {
         <div className="relative z-10 text-center px-6">
           {/* Framer motion animations applied via client wrappers */}
           <HeroFadeIn delay={0.2} className="text-white/70 text-xs uppercase tracking-[0.4em] mb-4">
-            {settings?.content?.about?.kicker || settings?.aboutKicker || "Our Story"}
+            {contentValue(settings, "about.kicker", "Our Story")}
           </HeroFadeIn>
 
           <HeroTitle delay={0.4} className="font-display text-5xl md:text-7xl text-white text-shadow-hero">
-            {(settings?.content?.about?.hero_title || settings?.aboutHeroTitle || "The Art of \nCelebration").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
+            {contentValue(settings, "about.hero_title", "The Art of \nCelebration").split("\n").map((line: string, i: number) => i === 1 ? <span key={i} className="italic">{line}</span> : <span key={i}>{line}</span>)}
           </HeroTitle>
         </div>
       </section>
@@ -102,10 +95,10 @@ export default function AboutPage() {
               </span>
               <h2 className="font-display text-4xl md:text-5xl mb-6">Crafting Memories Since 2012</h2>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-6">
-                {settings?.content?.about?.intro_p1 || settings?.aboutIntroP1 || "MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. What started as a passion project between two friends has blossomed into an internationally recognized event design studio."}
+                {contentValue(settings, "about.intro_p1", "MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. What started as a passion project between two friends has blossomed into an internationally recognized event design studio.")}
               </p>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-8">
-                {settings?.content?.about?.intro_p2 || settings?.aboutIntroP2 || "We specialize in creating immersive environments where light, texture, and emotion converge to tell your unique story. From intimate garden gatherings to grand ballroom transformations, we approach each project with the same dedication to artistry and detail."}
+                {contentValue(settings, "about.intro_p2", "We specialize in creating immersive environments where light, texture, and emotion converge to tell your unique story. From intimate garden gatherings to grand ballroom transformations, we approach each project with the same dedication to artistry and detail.")}
               </p>
               <div className="flex gap-8">
                 <div>
@@ -265,7 +258,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer logoUrl={logoUrl} email={settings.email} phone={settings.phone} address={settings.address || settings.location} instagram={settings.instagram_url} whatsapp={settings.whatsapp} />
       <WhatsAppButton />
     </div>
   );

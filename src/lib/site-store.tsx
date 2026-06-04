@@ -30,24 +30,10 @@ export type SiteSettings = {
   homeAtmosphere1?: string;
   homeAtmosphere2?: string;
   homeAtmosphere3?: string;
-  homeAtmosphereTitle1?: string;
-  homeAtmosphereTitle2?: string;
-  homeAtmosphereTitle3?: string;
-  homeAtmosphereDesc1?: string;
-  homeAtmosphereDesc2?: string;
-  homeAtmosphereDesc3?: string;
   homeMoment1?: string;
   homeMoment2?: string;
   homeMoment3?: string;
   homeMoment4?: string;
-  homeMomentTitle1?: string;
-  homeMomentTitle2?: string;
-  homeMomentTitle3?: string;
-  homeMomentTitle4?: string;
-  homeMomentCategory1?: string;
-  homeMomentCategory2?: string;
-  homeMomentCategory3?: string;
-  homeMomentCategory4?: string;
   contactPhone?: string;
   contactWhatsapp?: string;
   contactAddress?: string;
@@ -96,12 +82,6 @@ const DEFAULTS: SiteData = {
     homeAtmosphere1: getSrc(gallery1),
     homeAtmosphere2: getSrc(gallery2),
     homeAtmosphere3: getSrc(gallery3),
-    homeAtmosphereTitle1: "Wedding Floral Design",
-    homeAtmosphereDesc1: "Bespoke floral installations that turn every aisle into a garden of dreams.",
-    homeAtmosphereTitle2: "Atmospheric Lighting",
-    homeAtmosphereDesc2: "Elegant lighting schemes that sculpt your event space in warmth and wonder.",
-    homeAtmosphereTitle3: "Outdoor Event Styling",
-    homeAtmosphereDesc3: "Enchanting outdoor designs with luxury details and seamless seasonal flow.",
     homeMoment1: getSrc(gallery4),
     homeMoment2: getSrc(gallery5),
     homeMoment3: getSrc(gallery6),
