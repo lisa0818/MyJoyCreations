@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Sparkles,
@@ -13,6 +14,11 @@ import {
   Phone,
   Mail,
   MapPin,
+  Trophy, 
+  Palette, 
+  BadgeDollarSign, 
+  Clock,
+  Camera
 } from "lucide-react";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "@/components/ScrollReveal";
 import { Navbar } from "@/components/Navbar";
@@ -20,6 +26,9 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
 import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
+import InstagramSection from "@/components/InstagramSection";
+import { Parallax, ParallaxImage, ParallaxBg, FloatingElement, MotionCTA } from "@/components/Parallax";
+import { Marquee } from "@/components/Marquee";
 
 interface Asset {
   image_key: string;
@@ -55,27 +64,6 @@ const galleryMetadata = [
 ];
 
 
-const packages = [
-  {
-    name: "Essential",
-    price: "From $2,500",
-    features: ["Floral centerpieces", "Ambient lighting", "Table decor", "Consultation"],
-    popular: false,
-  },
-  {
-    name: "Luxury",
-    price: "From $5,500",
-    features: ["Full floral design", "Architectural lighting", "Stage decoration", "Drapery & linens", "Dedicated planner"],
-    popular: true,
-  },
-  {
-    name: "Bespoke",
-    price: "Custom",
-    features: ["Complete design concept", "Premium installations", "Themed environments", "Lighting choreography", "Full event production"],
-    popular: false,
-  },
-];
-
 export default async function HomePage() {
   const settings = await getSettings();
   // Fetch assets from Supabase
@@ -102,6 +90,13 @@ export default async function HomePage() {
   // Safely grab the spotlight item or provide a structured fallback
   const featuredGalleryItem = galleryItems[0] || { image: "", title: "Featured Creation", category: "Design" };
 
+  const whyUsData = [
+  { title: "Bespoke Event Design", icon: Trophy, desc: "Every celebration is uniquely designed to reflect your vision, style, and occasion." },
+  { title: "Customized Themes", icon: Palette, desc: "Every event is unique. We design exclusively for your vision." },
+  { title: "Budget-Friendly", icon: BadgeDollarSign, desc: "Premium quality decoration at packages that fit every budget." },
+  { title: "On-Time Execution", icon: Clock, desc: "We respect your time. Setup is always ready exactly when it needs to be." },
+];
+
   return (
     <div className="min-h-screen bg-[var(--color-ivory)]">
       <Navbar logoUrl={logoUrl} />
@@ -110,25 +105,24 @@ export default async function HomePage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           {heroMainUrl && (
-            <Image
+            <ParallaxImage
               src={heroMainUrl}
               alt="Luxury event decoration"
-              priority
-              fill
-              className="object-cover"
-              sizes="100vw"
+              speed={180}
+              scale={1.15}
+              overlayClassName="hero-gradient"
             />
           )}
-          <div className="absolute inset-0 hero-gradient" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
+              
           <HeroFadeIn delay={0.2} className="text-white/80 text-xs font-medium uppercase tracking-[0.4em] mb-8">
             {contentValue(settings, "home.kicker", "The Art of Celebration")}
           </HeroFadeIn>
 
           <HeroTitle delay={0.4} className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white leading-[0.95] text-balance mb-8 text-shadow-hero">
-            {contentValue(settings, "home.hero_title", "Where Light\nMeets Legacy")
+            {contentValue(settings, "home.hero_title", "Where Decor \nMeets Distinction")
               .split("\n")
               .map((line: string, i: number) => 
                 i === 0 ? (
@@ -143,7 +137,7 @@ export default async function HomePage() {
 
           <HeroFadeIn delay={0.6}>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light mb-12">
-              {contentValue(settings, "home.lead", "Architectural event lighting and bespoke floral curation for the world's most intimate celebrations.")}
+              {contentValue(settings, "home.lead", "Stunning decoration & lighting for celebrations that deserve nothing less than extraordinary.")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -163,12 +157,15 @@ export default async function HomePage() {
           </HeroFadeIn>
         </div>
 
-        {/* Animated Line Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-          <div className="w-px h-16 bg-gradient-to-b from-white/0 via-white/50 to-white/0 animate-pulse" />
-        </div>
       </section>
 
+      {/* Marquee */}
+      <section className="bg-[var(--color-surface)] py-4 border-y border-[var(--color-border)]">
+        <Marquee
+          items={[ "Indoor/Outdoor Celebrations", "Lightings for all Events", "Weddings", "Roce Ceremony", "Portonnem", "Engagements", "Birthdays", "Anniversaries", "Parties", "Baptism", "Confirmations","Communion", "Themed Events","All Events Welcome"]}
+          speed={40}
+        />
+      </section>
 
       {/* Services Section */}
       <section className="py-24 md:py-32">
@@ -198,6 +195,8 @@ export default async function HomePage() {
                   <div className="group cursor-pointer">
                     <div className="relative overflow-hidden rounded-2xl cinematic-shadow mb-6 aspect-[4/5]">
                       {service.image && (
+                         <Parallax speed={30} className="h-full">
+
                         <Image
                           src={service.image}
                           alt={service.title}
@@ -205,6 +204,7 @@ export default async function HomePage() {
                           sizes="(max-width: 768px) 100vw, 33vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
+                         </Parallax>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl" />
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
@@ -268,18 +268,9 @@ export default async function HomePage() {
             <StaggerItem className="col-span-12 md:col-span-5 flex flex-col justify-center">
               <div className="space-y-4">
                 <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">
-                  Each event is a blank canvas where we paint with light, texture, and emotion. Explore our complete portfolio to witness the breadth of our creative vision.
+                  Each event is a blank canvas where we paint with light, texture, and creativity. Explore our complete portfolio to witness the breadth of our creative vision.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Weddings", "Birthdays", "Galas", "Outdoor", "Themed"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-4 py-1.5 rounded-full border border-[var(--color-border)] text-[10px] uppercase tracking-[0.15em] font-medium hover:bg-[var(--color-brand)] hover:text-white hover:border-[var(--color-brand)] transition-all cursor-pointer"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                
                 <Link
                   href="/portfolio"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-brand)] hover:gap-3 transition-all"
@@ -313,65 +304,32 @@ export default async function HomePage() {
         </div>
       </section>
 
-
-      {/* Featured Packages */}
-      <section className="bg-[var(--color-surface)] py-24 md:py-32">
+      {/* Why Choose Us Section*/}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
             <div className="text-center mb-16">
-              <span className="text-[var(--color-brand)] text-[10px] font-semibold uppercase tracking-[0.3em] mb-3 block">
-                Packages
-              </span>
-              <h2 className="font-display text-4xl md:text-5xl mb-4">Celebration Packages</h2>
-              <p className="text-[var(--color-muted-foreground)] max-w-xl mx-auto">
-                Thoughtfully designed packages to elevate your special moments.
-              </p>
+              <h2 className="font-display text-4xl mb-4">Why Choose Us</h2>
+              <p className="text-[var(--color-muted-foreground)] max-w-lg mx-auto">We don't just decorate spaces — we craft experiences that live on in photographs and memories forever.</p>
             </div>
           </ScrollReveal>
-
-          <StaggerContainer className="grid md:grid-cols-3 gap-8" staggerDelay={0.15}>
-            {packages.map((pkg) => (
-              <StaggerItem key={pkg.name}>
-                <div
-                  className={`bg-white rounded-2xl p-8 h-full flex flex-col ${
-                    pkg.popular
-                      ? "ring-2 ring-[var(--color-brand)] shadow-xl shadow-[var(--color-brand)]/10"
-                      : "cinematic-shadow hover-lift"
-                  }`}
-                >
-                  {pkg.popular && (
-                    <span className="inline-block self-start px-3 py-1 bg-[var(--color-brand)] text-white text-[10px] font-semibold uppercase tracking-[0.2em] rounded-full mb-4">
-                      Most Popular
-                    </span>
-                  )}
-                  <h3 className="font-display text-2xl mb-2">{pkg.name}</h3>
-                  <p className="text-[var(--color-brand)] font-display text-3xl mb-6">{pkg.price}</p>
-                  <ul className="space-y-3 flex-1 mb-8">
-                    {pkg.features.map((f) => (
-                      <li key={f} className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
-                        <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href="/contact"
-                    className={`w-full text-center py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all ${
-                      pkg.popular
-                        ? "bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-warm)]"
-                        : "bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white"
-                    }`}
-                  >
-                    Inquire Now
-                  </Link>
+          <div className="grid md:grid-cols-4 gap-8">
+            {whyUsData.map((item) => (
+              <div key={item.title} className="text-center p-6 rounded-2xl border border-[var(--color-border)]">
+                <div className="w-12 h-12 bg-[var(--color-brand)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-6 h-6 text-[var(--color-brand)]" />
                 </div>
-              </StaggerItem>
+                <h3 className="font-bold mb-2">{item.title}</h3>
+                <p className="text-sm text-[var(--color-muted-foreground)]">{item.desc}</p>
+              </div>
             ))}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 
-      {/* Inquiry CTA */}
+             
+      
+         {/* Inquiry CTA */}
       <section className="relative py-32 md:py-40 overflow-hidden">
         <div className="absolute inset-0 z-0">
           {heroMainUrl && (
@@ -393,7 +351,8 @@ export default async function HomePage() {
               Let's create something <span className="italic">timeless</span>
             </h2>
             <p className="text-[var(--color-muted-foreground)] max-w-lg mx-auto mb-10">
-              Ready to transform your event into an unforgettable experience? Our team is here to bring your vision to life.
+              Ready to transform your event into an unforgettable experience? <br></br>
+              We are here to bring your vision to life.
             </p>
             <Link
               href="/contact"
@@ -405,6 +364,8 @@ export default async function HomePage() {
           </ScrollReveal>
         </div>
       </section>
+
+       <InstagramSection settings={settings} />
 
       {/* Contact Bar */}
       <section className="bg-[var(--color-ink)] py-16">

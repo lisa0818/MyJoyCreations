@@ -87,7 +87,7 @@ export default async function ContactPage() {
                     { icon: Phone, label: "Phone", value: "+1 (234) 567-890", href: "tel:+1234567890" },
                     { icon: Mail, label: "Email", value: "hello@myjoycreations.com", href: "mailto:hello@myjoycreations.com" },
                     { icon: MapPin, label: "Address", value: "123 Celebration Lane, London, UK", href: null },
-                    { icon: Clock, label: "Hours", value: "Mon - Sat: 9AM - 7PM", href: null },
+                    { icon: Clock, label: "Clock", value: "instagram.com/myjoycreations", href: "https://instagram.com/myjoycreations" },
                   ].map((item) => (
                     <StaggerItem key={item.label}>
                       <div className="flex items-start gap-4 p-6 bg-white rounded-xl cinematic-shadow">

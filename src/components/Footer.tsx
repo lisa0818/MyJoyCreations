@@ -66,7 +66,7 @@ export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: 
               Services
             </h4>
             <nav className="flex flex-col gap-3">
-              {["Wedding Decor", "Floral Design", "Stage & Lighting", "Outdoor Setup", "Theme Decorations", "Birthday Events"].map(
+              {["Stage & Lighting", "Outdoor/Indoor Setup", "Theme Decorations", "Wedding Decor", "Birthday Events", "Parties", "All types of Events"].map(
                 (item) => (
                   <span key={item} className="text-sm text-[var(--color-muted-foreground)]">
                     {item}
@@ -102,7 +102,7 @@ export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: 
                 </div>
               <div className="flex items-center gap-4 mt-4">
                 <a
-                  href={instagram || "https://instagram.com"}
+                  href={instagram || "https://www.instagram.com/myjoycreations_/"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2.5 rounded-full bg-[var(--color-background)] border border-[var(--color-border)] hover:bg-[var(--color-brand)] hover:text-white hover:border-[var(--color-brand)] transition-all"
@@ -110,7 +110,7 @@ export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: 
                   <Camera className="w-4 h-4" />
                 </a>
                 <a
-                  href={whatsapp ? `https://wa.me/${whatsapp.replace(/^\+/, "")}` : "https://wa.me/1234567890"}
+                  href={whatsapp ? `https://wa.me/${whatsapp.replace(/^\+/, "")}` : "https://wa.me/123456789"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2.5 rounded-full bg-[var(--color-background)] border border-[var(--color-border)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all"
@@ -127,10 +127,6 @@ export function Footer({ logoUrl, email, phone, address, instagram, whatsapp }: 
           <p className="text-xs text-[var(--color-muted-foreground)] uppercase tracking-[0.15em]">
             &copy; {new Date().getFullYear()} MyJoy Creations. All rights reserved.
           </p>
-          <div className="flex gap-8 text-xs text-[var(--color-muted-foreground)] uppercase tracking-[0.15em]">
-            <span className="hover:text-[var(--color-brand)] cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="hover:text-[var(--color-brand)] cursor-pointer transition-colors">Terms of Service</span>
-          </div>
         </div>
       </div>
     </footer>

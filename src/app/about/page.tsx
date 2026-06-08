@@ -9,26 +9,21 @@ import { WhatsAppButton } from "../../components/WhatsAppButton";
 // Import our new motion wrappers
 import { HeroFadeIn, HeroTitle } from "@/components/MotionWrapper";
 import { getSettings, getHomepageAssets, contentValue } from "@/lib/site";
+import InstagramSection from "@/components/InstagramSection";
 
 const values = [
-  { icon: Lightbulb, title: "Innovation", desc: "We push boundaries to craft custom-tailored sensory spaces unique to your concept." },
-  { icon: Target, title: "Precision", desc: "From scheduling blueprints to tiny floral nodes, we design with rigorous attention." },
-  { icon: Heart, title: "Empathy", desc: "We listen carefully to ensure your personal cultural story guides our creative approach." },
-  { icon: Star, title: "Excellence", desc: "We hold ourselves to premium editorial production values across every framework layer." },
+  { icon: Lightbulb, title: "Innovation", desc: "Staying ahead with the latest trends and creative decoration techniques." },
+  { icon: Heart, title: "Passion", desc: "We pour our heart into every project, treating each event as our own celebration." },
+  { icon: Users, title: "Collaboration", desc: "Working closely with clients to bring their unique vision to life." },
+  { icon: Sparkles, title: "Excellence", desc: "Uncompromising quality in every detail, from concept to execution." },
 ];
 
 const timeline = [
-  { year: "2012", title: "The Studio Opens", desc: "MyJoy Creations launched as a localized creative project design partnership." },
-  { year: "2016", title: "Going National", desc: "Expanded production across major regional centers with dedicated warehousing engines." },
-  { year: "2020", title: "Digital Immersive Shift", desc: "Integrated multi-sensory light maps and precision structural mechanics into our designs." },
-  { year: "2025", title: "Global Recognition", desc: "Awarded top design honours for editorial aesthetic engineering execution milestones." },
-];
-
-const team = [
-  { name: "Joy Mitchell", role: "Creative Director", bio: "Artistic visionary with over a decade of dedication to conceptual interior staging transformations." },
-  { name: "Marcus Vance", role: "Technical Producer", bio: "Applies rigid physical calculation blueprints to transition abstract concepts into real structural builds." },
-  { name: "Sophia Lin", role: "Floral Designer", bio: "Specializes in bespoke organic palette sourcing configurations across seasonal balance metrics." },
-  { name: "David Kross", role: "Logistics Lead", bio: "Controls complex on-site schedules to ensure flawless execution deployment." },
+  { year: "2023", title: "The Begining", desc: "MyJoy Creations was founded with a passion for event décor and lighting, bringing creative concepts to weddings, birthdays, and special celebrations across Goa." },
+  { year: "2024", title: "Building Our Presence", desc: "Through dedication, attention to detail, and client trust, we expanded our services and became a preferred choice for customized event décor and lighting solutions." },
+  { year: "2025", title: "Growing with Every Event", desc: "From intimate gatherings to larger-scale events, we continued transforming venues into beautiful experiences, earning recognition through word-of-mouth and satisfied clients." },
+  { year: "2026", title: "Creating Memorable Celebrations", desc: "Today, MyJoy Creations proudly serves clients across Goa, delivering elegant décor, creative lighting, and personalized event experiences while continuing to grow with every celebration we design." },
+  //{ year: "202", title: "Continuing the Journey", desc: "Today, MyJoy Creations stands as a trusted name in event décor and lighting, dedicated to creating elegant celebrations that blend creativity, craftsmanship, and attention to every detail." },
 ];
 
 export default async function AboutPage() {
@@ -95,25 +90,11 @@ export default async function AboutPage() {
               </span>
               <h2 className="font-display text-4xl md:text-5xl mb-6">Crafting Memories Since 2012</h2>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-6">
-                {contentValue(settings, "about.intro_p1", "MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. What started as a passion project between two friends has blossomed into an internationally recognized event design studio.")}
+                {contentValue(settings, "about.intro_p1", "MyJoy Creations was born from a simple belief: every celebration deserves to be extraordinary. What started as a passion project between two friends has become a journey of creating stunning décor for life's most cherished moments.")}
               </p>
               <p className="text-[var(--color-muted-foreground)] leading-relaxed mb-8">
-                {contentValue(settings, "about.intro_p2", "We specialize in creating immersive environments where light, texture, and emotion converge to tell your unique story. From intimate garden gatherings to grand ballroom transformations, we approach each project with the same dedication to artistry and detail.")}
+                {contentValue(settings, "about.intro_p2", "With a vision to redefine event décor through artistry, innovation, and personalized service, we specialize in designing immersive celebrations where lighting, décor, and ambiance come together seamlessly to create extraordinary experiences. Every project is approached with passion, precision, and a commitment to turning your most important moments into cherished memories.")}
               </p>
-              <div className="flex gap-8">
-                <div>
-                  <p className="font-display text-3xl text-[var(--color-brand)]">500+</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Events</p>
-                </div>
-                <div>
-                  <p className="font-display text-3xl text-[var(--color-brand)]">12</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Years</p>
-                </div>
-                <div>
-                  <p className="font-display text-3xl text-[var(--color-brand)]">50+</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Awards</p>
-                </div>
-              </div>
             </ScrollReveal>
           </div>
         </div>
@@ -210,42 +191,16 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="py-24 md:py-32">
-        <div className="max-w-7xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <span className="text-[var(--color-brand)] text-[10px] font-semibold uppercase tracking-[0.3em] mb-3 block">
-                The Team
-              </span>
-              <h2 className="font-display text-4xl md:text-5xl">Meet the Creatives</h2>
-            </div>
-          </ScrollReveal>
-          <StaggerContainer className="grid md:grid-cols-4 gap-8" staggerDelay={0.15}>
-            {team.map((member) => (
-              <StaggerItem key={member.name}>
-                <div className="text-center group">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-warm)] mx-auto mb-6 flex items-center justify-center">
-                    <Users className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="font-display text-xl mb-1">{member.name}</h3>
-                  <p className="text-[var(--color-brand)] text-xs uppercase tracking-[0.2em] mb-3">{member.role}</p>
-                  <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">{member.bio}</p>
-                </div>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
+       <InstagramSection settings={settings} />
 
       {/* CTA */}
-      <section className="py-24 bg-[var(--color-ink)]">
+      <section className="py-24 bg-[var(--color-surface)]">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <ScrollReveal>
-            <h2 className="font-display text-4xl md:text-5xl text-white mb-6">
+            <h2 className="font-display text-4xl md:text-5xl text-black mb-6">
               Ready to work with us?
             </h2>
-            <p className="text-white/60 mb-10 max-w-lg mx-auto">
+            <p className="text-black/60 mb-10 max-w-lg mx-auto">
               Let's collaborate to create an event that will be remembered for a lifetime.
             </p>
             <Link
